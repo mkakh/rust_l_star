@@ -94,3 +94,98 @@ impl ObservationTable {
         v.iter().collect()
     }
 }
+
+impl std::fmt::Display for ObservationTable {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut column_widths = Vec::with_capacity(self.columns.len() + 1);
+
+        column_widths.push(4);
+        for column in &self.columns {
+            let column_len = format!("{:?}", column).len();
+            column_widths.push(column_len + 2);
+        }
+
+        for row in &self.rows {
+            let row_width = format!("{:?}", row).len() + 2;
+            if column_widths[0] < row_width {
+                column_widths[0] = row_width;
+            }
+        }
+
+        for ((prefix, suffix), cell_value) in &self.cells {
+            let prefix_len = format!("{:?}", prefix).len() + 2;
+            if column_widths[0] < prefix_len {
+                column_widths[0] = prefix_len;
+            }
+            if let Some(index) = self.columns.iter().position(|c| c == suffix) {
+                let cell_len = cell_value.to_string().len() + 2;
+                if column_widths[index + 1] < cell_len {
+                    column_widths[index + 1] = cell_len;
+                }
+            }
+        }
+
+        write!(f, "{:<width$}", "", width = column_widths[0])?;
+        for (i, column) in self.columns.iter().enumerate() {
+            write!(
+                f,
+                "{:width$}",
+                format!("{:?}", column),
+                width = column_widths[i + 1]
+            )?;
+        }
+        writeln!(f)?;
+
+        for row in &self.rows {
+            write!(
+                f,
+                "{:width$}",
+                format!("{:?}", row),
+                width = column_widths[0]
+            )?;
+            for (i, column) in self.columns.iter().enumerate() {
+                let value = self.get_cell(row, column).map_or("-".to_string(), |v| {
+                    if *v {
+                        "1".to_string()
+                    } else {
+                        "0".to_string()
+                    }
+                });
+                write!(f, "{:width$}", value, width = column_widths[i + 1])?;
+            }
+            writeln!(f)?;
+        }
+
+        let total_width: usize = column_widths.iter().sum::<usize>() + column_widths.len() - 1;
+        writeln!(f, "{}", "-".repeat(total_width))?;
+
+        let mut extra_rows = vec![];
+        for ((prefix, _), _) in &self.cells {
+            if !self.rows.contains(prefix) && !extra_rows.contains(prefix) {
+                extra_rows.push(prefix.clone());
+            }
+        }
+
+        for row in extra_rows {
+            write!(
+                f,
+                "{:width$}",
+                format!("{:?}", row),
+                width = column_widths[0]
+            )?;
+            for (i, column) in self.columns.iter().enumerate() {
+                let value = self.get_cell(&row, column).map_or("-".to_string(), |v| {
+                    if *v {
+                        "1".to_string()
+                    } else {
+                        "0".to_string()
+                    }
+                });
+                write!(f, "{:width$}", value, width = column_widths[i + 1])?;
+            }
+            writeln!(f)?;
+        }
+
+        Ok(())
+    }
+}

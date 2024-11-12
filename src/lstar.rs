@@ -124,7 +124,7 @@ fn make_consistent(table: &mut ObservationTable, target: &DFA) {
                                 is_consistent = false;
                                 table.add_columns(concat(&vec![a.to_owned()], e));
                                 fill(table, target);
-                                eprintln!("Table: {:?}", table);
+                                eprintln!("{}", table);
                                 break 'label;
                             }
                         }
@@ -157,7 +157,7 @@ fn make_closed(table: &mut ObservationTable, target: &DFA) {
                     table.add_rows(sa);
                     fill(table, target);
                     is_closed = false;
-                    eprintln!("Table: {:?}", table);
+                    eprintln!("{}", table);
                     break 'label;
                 }
             }
@@ -168,7 +168,7 @@ fn make_closed(table: &mut ObservationTable, target: &DFA) {
 pub fn learn(target: &DFA) -> (DFA, ObservationTable) {
     let mut table = ObservationTable::new();
     fill(&mut table, target);
-    eprintln!("Initial table: {:?}", table);
+    eprintln!("{}", table);
 
     loop {
         make_consistent(&mut table, target);
@@ -183,7 +183,7 @@ pub fn learn(target: &DFA) -> (DFA, ObservationTable) {
                 table.add_rows(ce[..i].to_vec());
             }
             fill(&mut table, target);
-            eprintln!("table: {:?}", table);
+            eprintln!("{}", table);
         } else {
             break;
         }
